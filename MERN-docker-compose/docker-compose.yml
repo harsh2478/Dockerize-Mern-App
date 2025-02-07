@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: frontend
+    build:
+      context: ./mern/frontend/
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - 5173:5173
+    networks:
+      - mern-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  backend:
+    depends_on:
+      - db
+    image: backend
+    build:
+      context: ./mern/backend/
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - 5050:5050
+    volumes:
+      - mern-data:/data/db
+    networks:
+      - mern-network
+    environment:
+      - MONGO_URI=mongodb://db:27017
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    networks:
+      - mern-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  mern-network:
+    driver: overlay
+
+volumes:
+  mern-data:
+    driver: local
+
